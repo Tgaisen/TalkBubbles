@@ -9,5 +9,6 @@
     "text.autoconfig.talkbubbles.option.backgroundRed": "背景红度",
     "text.autoconfig.talkbubbles.option.backgroundGreen": "背景绿度",
     "text.autoconfig.talkbubbles.option.backgroundBlue": "背景蓝度",
-    "text.autoconfig.talkbubbles.option.showOwnBubble": "显示自己的气泡"
+    "text.autoconfig.talkbubbles.option.showOwnBubble": "显示自己的气泡",
+    "text.autoconfig.talkbubbles.option.maxBubbles": "最大堆叠气泡数"
 }

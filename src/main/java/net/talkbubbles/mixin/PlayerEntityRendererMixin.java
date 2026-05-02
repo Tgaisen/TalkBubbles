@@ -1,5 +1,6 @@
 package net.talkbubbles.mixin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -7,42 +8,35 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.fabricmc.api.Environment;
 import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory.Context;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.entity.PlayerLikeEntity;
 import net.talkbubbles.TalkBubbles;
 import net.talkbubbles.accessor.AbstractClientPlayerEntityAccessor;
-import net.talkbubbles.util.RenderBubble;
+import net.talkbubbles.accessor.PlayerEntityRenderStateAccessor;
+import net.talkbubbles.util.Bubble;
 
 @Environment(EnvType.CLIENT)
 @Mixin(PlayerEntityRenderer.class)
-public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
+public abstract class PlayerEntityRendererMixin {
 
-    public PlayerEntityRendererMixin(Context ctx, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) {
-        super(ctx, model, shadowRadius);
-    }
-
-    @Inject(method = "render", at = @At("HEAD"))
-    private void renderMixin(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i,
-            CallbackInfo info) {
-        if (!abstractClientPlayerEntity.isInvisible() && abstractClientPlayerEntity.isAlive()) {
-            int oldAge = ((AbstractClientPlayerEntityAccessor) abstractClientPlayerEntity).getOldAge();
-            if (oldAge != 0 && oldAge != -1) {
-                if (abstractClientPlayerEntity.age - oldAge > TalkBubbles.CONFIG.chatTime)
-                    ((AbstractClientPlayerEntityAccessor) abstractClientPlayerEntity).setChatText(null, 0, 0, 0);
-                List<String> textList = ((AbstractClientPlayerEntityAccessor) abstractClientPlayerEntity).getChatText();
-                if (textList != null && !textList.isEmpty()) {
-                    RenderBubble.renderBubble(matrixStack, vertexConsumerProvider, this.getTextRenderer(), this.dispatcher, textList,
-                            ((AbstractClientPlayerEntityAccessor) abstractClientPlayerEntity).getWidth(), ((AbstractClientPlayerEntityAccessor) abstractClientPlayerEntity).getHeight(),
-                            abstractClientPlayerEntity.getHeight(), i);
-                }
+    @Inject(method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V", at = @At("TAIL"))
+    private void talkbubbles$copyBubblesToState(PlayerLikeEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
+        if (!(entity instanceof AbstractClientPlayerEntity player)) {
+            return;
+        }
+        AbstractClientPlayerEntityAccessor data = (AbstractClientPlayerEntityAccessor) player;
+        int chatTime = TalkBubbles.CONFIG.chatTime;
+        int currentAge = entity.age;
+        List<Bubble> live = new ArrayList<>();
+        for (Bubble b : data.talkbubbles$getBubbles()) {
+            if (currentAge - b.addedAge <= chatTime) {
+                live.add(b);
             }
         }
+        ((PlayerEntityRenderStateAccessor) state).talkbubbles$setBubbles(live, entity.getHeight());
     }
 }

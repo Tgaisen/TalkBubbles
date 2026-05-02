@@ -93,7 +93,7 @@ public class ChatHudMixin {
                         if (width % 2 != 0) {
                             width++;
                         }
-                        ((AbstractClientPlayerEntityAccessor) list.get(i)).setChatText(stringList, list.get(i).age, width, height);
+                        ((AbstractClientPlayerEntityAccessor) list.get(i)).talkbubbles$addBubble(stringList, list.get(i).age, width, height);
                         break;
                     }
             }

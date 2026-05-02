@@ -22,5 +22,7 @@ public class TalkBubblesConfig implements ConfigData {
     @Comment("0 = disabled")
     public int maxUUIDWordCheck = 0;
     public boolean showOwnBubble = false;
+    @Comment("Maximum number of stacked bubbles per player; new messages push old ones up and oldest is dropped")
+    public int maxBubbles = 4;
 
 }
