@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.MessageIndicator;
@@ -25,6 +26,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import net.talkbubbles.TalkBubbles;
 import net.talkbubbles.accessor.AbstractClientPlayerEntityAccessor;
+import net.talkbubbles.network.BubblePayload;
 
 @Environment(EnvType.CLIENT)
 @Mixin(ChatHud.class)
@@ -38,6 +40,11 @@ public class ChatHudMixin {
     // onChatMessage is now done in MessageHandler.class
     @Inject(method = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V", at = @At("HEAD"))
     private void addMessageMixin(Text message, @Nullable MessageSignatureData signature, @Nullable MessageIndicator indicator, CallbackInfo info) {
+        // If the server speaks the talkbubbles protocol, defer entirely to the BubblePayload receiver
+        // to avoid duplicate bubbles from chat-text parsing.
+        if (ClientPlayNetworking.canSend(BubblePayload.ID)) {
+            return;
+        }
         if (client != null && client.player != null) {
             String detectedSenderName = extractSender(message);
             if (!detectedSenderName.isEmpty()) {
