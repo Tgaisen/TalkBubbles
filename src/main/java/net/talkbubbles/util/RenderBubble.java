@@ -2,6 +2,7 @@ package net.talkbubbles.util;
 
 import java.util.List;
 
+import net.minecraft.client.render.*;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -10,10 +11,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
@@ -50,6 +47,7 @@ public class RenderBubble {
         int bgColor = packColor(TalkBubbles.CONFIG.backgroundRed, TalkBubbles.CONFIG.backgroundGreen, TalkBubbles.CONFIG.backgroundBlue,
                 TalkBubbles.CONFIG.backgroundOpacity);
         int textColor = TalkBubbles.CONFIG.chatColor | 0xFF000000;
+        boolean textShadow = TalkBubbles.CONFIG.chatShadow | false;
         VertexConsumerProvider.Immediate immediate = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
         // Newest bubble at index size-1 should sit closest to the head (lowest in world);
@@ -61,7 +59,7 @@ public class RenderBubble {
             Bubble b = bubbles.get(i);
             matrixStack.push();
             matrixStack.translate(0f, anchorY, 0f);
-            drawSingleBubble(matrixStack, queue, textRenderer, immediate, b, light, bgColor, textColor);
+            drawSingleBubble(matrixStack, queue, textRenderer, immediate, b, light, bgColor, textColor, textShadow);
             matrixStack.pop();
 
             if (i - 1 >= 0) {
@@ -78,12 +76,12 @@ public class RenderBubble {
     }
 
     private static void drawSingleBubble(MatrixStack matrixStack, OrderedRenderCommandQueue queue, TextRenderer textRenderer,
-            VertexConsumerProvider.Immediate immediate, Bubble bubble, int light, int bgColor, int textColor) {
+            VertexConsumerProvider.Immediate immediate, Bubble bubble, int light, int bgColor, int textColor, boolean textShadow) {
         final int bw = bubble.width;
         final int bh = bubble.height;
         final List<String> lines = bubble.lines;
 
-        queue.submitCustom(matrixStack, RenderLayer.getEntityTranslucent(BACKGROUND), (entry, vc) -> {
+        queue.submitCustom(matrixStack, RenderLayers.entityTranslucent(BACKGROUND), (entry, vc) -> {
             // Top left
             emitSlice(entry, vc, -bw / 2f - 2f, -bh - (bh - 1f) * 7f, 5f, 5f, 0f, 0f, 5f, 5f, light, bgColor);
             // Mid left
@@ -111,7 +109,7 @@ public class RenderBubble {
             String line = lines.get(u - 1);
             float x = -textRenderer.getWidth(line) / 2.0F;
             float y = (float) lines.size() + (u - lines.size()) * 9f;
-            textRenderer.draw(line, x, y, textColor, false, matrix4f, immediate, TextRenderer.TextLayerType.POLYGON_OFFSET, 0, light);
+            textRenderer.draw(line, x, y, textColor, textShadow, matrix4f, immediate, TextRenderer.TextLayerType.POLYGON_OFFSET, 0, light);
         }
     }
 

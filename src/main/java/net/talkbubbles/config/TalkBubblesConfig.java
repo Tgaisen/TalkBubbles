@@ -15,6 +15,7 @@ public class TalkBubblesConfig implements ConfigData {
     public int chatColor = 1315860;
     public float chatHeight = 0.0f;
     public float chatScale = 1.0f;
+    public boolean chatShadow = false;
     public float backgroundOpacity = 0.7F;
     public float backgroundRed = 1.0F;
     public float backgroundGreen = 1.0F;
